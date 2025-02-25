@@ -119,9 +119,9 @@ async def main():
     metric_tracker.print_metrics()
     
     # Generate an HTML content for the repository metrics
-    repo_metrics_html_generator = html_generator.GitHubRepoMetricsHTMLGenerator(github_user.user_name, "dark")
+    repo_metrics_html_generator = html_generator.GitHubRepoMetricsHTMLGenerator(github_user.user_name, "light")
     repo_metrics_html_generator.generate_html_for_metrics(metric_tracker)
-    repo_metrics_html_generator.create_html_file("dark.html")
+    repo_metrics_html_generator.create_html_file("index.html")
     
     # Generate an CSV report for the repository metrics
     csv_generator = CSVReportGenerator()
