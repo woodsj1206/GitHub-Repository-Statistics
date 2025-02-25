@@ -25,8 +25,8 @@ cd GitHub-Repository-Statistics
 ### 2. Create and Activate a Virtual Environment
 Set up a virtual environment to manage dependencies:
 ```bash
-python -m venv venv
-venv/Scripts/activate
+python -m venv myvenv
+source myvenv/Scripts/activate
 ```
 
 ### 3. Install Dependencies
