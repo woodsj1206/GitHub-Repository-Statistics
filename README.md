@@ -3,7 +3,7 @@ This program uses the [GitHub API](https://docs.github.com/en/rest) to track sta
 
 
 ## Overview
-The following table highlights the different output formats that the program generates. It provides examples of the HTML reports in both light and dark themes, as well as a sample of how the generated CSV report can be imported into Google Sheets for further analysis and visualization.
+The following table highlights the different output formats that the program generates. It provides examples of the HTML reports in both light and dark themes, as well as a sample of how the generated CSV report can be imported into Google Sheets for further analysis and visualization:
 
 | Feature                                                      | Preview                                                                                                                                                                                                                                                                                           |
 | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -66,9 +66,8 @@ After running the script, the following files will be generated in `output_files
 The following shows the main file structure of the project with brief descriptions:
 ```
 ├── api_utils.py                # Functions for interacting with the GitHub API
-├── csv_report_generator.py     # Generates CSV reports from fetched repository data
+├── csv_report_generator.py     # Generates CSV reports from repository data
 ├── html_generator.py           # Creates interactive HTML summary reports
-├── csv_handler.py              # Handles reading and writing CSV files
 ├── main.py                     # Main script to execute the data fetching and report generation
 ├── repository_metric.py        # Defines repository metric tracking classes and logic
 ├── user.py                     # Manages user-related data and GitHub credentials
