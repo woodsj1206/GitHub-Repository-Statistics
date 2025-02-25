@@ -1,5 +1,6 @@
 import csv
-from datetime import datetime
+from datetime import datetime, timezone
+import os
 import repository_metric
 
 class CSVReportGenerator:
@@ -23,32 +24,36 @@ class CSVReportGenerator:
         return datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ").strftime("%m/%d/%Y")
         
 
-    def generate_repository_metrics_report(self, metric_tracker: repository_metric.RepositoryMetricsTracker, filename="repository_metrics_report"):
+    def generate_repository_metrics_report(self, metric_tracker: repository_metric.RepositoryMetricsTracker, output_folder="", filename="repository_metrics_report"):
         """
         Generates a CSV report with total repository metrics: Stars, Watchers, and Forks.
 
         Args:
             metric_tracker (RepositoryMetricsTracker): Tracker containing repository metrics.
+            output_folder (str, optional): The folder where the CSV file will be saved. If not specified, it will save in the current directory.
             filename (str, optional): Output CSV filename.
         """
+        current_date = f"{datetime.now(timezone.utc).date()}T00:00:00Z"
         
-        headers = ["Stars", "Watchers", "Forks"]
+        headers = ["Date", "Stars", "Watchers", "Forks"]
         data = [[
+            self.format_timestamp(current_date),
             metric_tracker.stargazers.total_metric_count,
             metric_tracker.watchers.total_metric_count,
             metric_tracker.forks.total_metric_count
         ]]
         
         
-        self.write_csv(f"{filename}.csv", data, headers)
+        self.write_csv(f"{filename}.csv", data, output_folder, headers)
         
 
-    def generate_total_traffic_metrics_report(self, metric_tracker: repository_metric.RepositoryMetricsTracker, filename="total_traffic_metric_report"):
+    def generate_total_traffic_metrics_report(self, metric_tracker: repository_metric.RepositoryMetricsTracker, output_folder="", filename="total_traffic_metric_report"):
         """
         Generates a CSV report summarizing total traffic metrics over time, including views and clones.
 
         Args:
             metric_tracker (RepositoryMetricsTracker): Tracker containing all traffic-related metrics.
+            output_folder (str, optional): The folder where the CSV file will be saved. If not specified, it will save in the current directory.
             filename (str, optional): Output CSV filename.
         """
         
@@ -70,15 +75,16 @@ class CSVReportGenerator:
                 unique_cloners
             ])
 
-        self.write_csv(f"{filename}.csv", data, headers)
+        self.write_csv(f"{filename}.csv", data, output_folder, headers)
 
 
-    def generate_traffic_metric_timestamp_report(self, traffic_metric: repository_metric.RepositoryTrafficMetric, filename="traffic_metric_timestamp_report"):
+    def generate_traffic_metric_timestamp_report(self, traffic_metric: repository_metric.RepositoryTrafficMetric, output_folder="", filename="traffic_metric_timestamp_report"):
         """
         Generates a CSV report of traffic metrics over time, showing timestamp, repository name, and metric count.
 
         Args:
             traffic_metric (RepositoryTrafficMetric): Tracker for traffic metrics.
+            output_folder (str, optional): The folder where the CSV file will be saved. If not specified, it will save in the current directory.
             filename (str, optional): Output CSV filename.
         """
         headers = ["Date", "Repository", f"{traffic_metric.metric_type.title()} {traffic_metric.name.title()}"]
@@ -88,20 +94,22 @@ class CSVReportGenerator:
             for repo in repositories
         ]
         
-        self.write_csv(f"{filename}_{traffic_metric.metric_type}_{traffic_metric.name}.csv", data, headers)
+        self.write_csv(f"{filename}_{traffic_metric.metric_type}_{traffic_metric.name}.csv", data, output_folder, headers)
 
   
-    def write_csv(self, filename: str, data: list, headers: list = []):
+    def write_csv(self, filename: str, data: list, output_folder="", headers: list = []):
         """
         Writes data to a CSV file.
 
         Args:
             filename (str): Name of the CSV file.
             data (list): Data rows to write.
+            output_folder (str, optional): The folder where the CSV file will be saved. If not specified, it will save in the current directory.
             headers (list, optional): Column headers for the CSV file.
         """
+        full_filename = os.path.join(output_folder, filename)
         
-        with open(filename, 'w', newline='') as file:
+        with open(full_filename, 'w', newline='') as file:
             writer = csv.writer(file)
             if headers:
                 writer.writerow(headers) 

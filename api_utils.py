@@ -9,12 +9,12 @@ class GitHubAPIHandler:
     """
     
 
-    def __init__(self, personal_access_token: dict[str, str], retries=3, delay=2):
+    def __init__(self, personal_access_token: str, retries=3, delay=2):
         """
         Initializes the GitHubAPIHandler instance with authentication and retry settings.
 
         Args:
-            personal_access_token (dict[str, str]): GitHub personal access token for authentication.
+            personal_access_token (str): GitHub personal access token for authentication.
             retries (int, optional): Number of times to retry a failed request. Defaults to 3.
             delay (int, optional): Delay (in seconds) between retries. Defaults to 2.
         """
@@ -24,15 +24,16 @@ class GitHubAPIHandler:
         self.request_headers = {"Authorization": f"Bearer {personal_access_token}"}
 
 
-    async def get_response_json(self, url: str) -> dict:
+    async def get_response(self, url: str, backoff_factor=2):
         """
-        Sends a GET request to the specified URL and returns the JSON response.
+        Sends an asynchronous GET request to the specified URL and returns the response object.
 
         Args:
-            url (str): The URL to send the GET request to.
+            url (str): The URL to which the GET request will be sent.
+            backoff_factor (int, optional): Factor used to calculate the retry delay (default is 2). It helps to increase the delay between retries exponentially.
 
         Returns:
-            dict: The JSON response if successful (status code 200); otherwise an empty dictionary after retries.
+            httpx.Response: The raw response object if the request is successful (status code 200). Returns `None` after retrying the specified number of attempts if unsuccessful.
         """
 
         # Calculate the total number of attempts (initial request + retries)
@@ -54,7 +55,7 @@ class GitHubAPIHandler:
             
                     # Check if the request was successful (status code 200)
                     if response.status_code == 200:
-                        return response.json()  # Return the JSON response if successful
+                        return response             # Return the response if successful
 
                 except Exception as e:
                     # Print the exception message if an error occurs during the request
@@ -62,11 +63,12 @@ class GitHubAPIHandler:
         
                 # Wait before next retry (if not the last attempt)
                 if i < self.retries:
-                    print(f"Retrying after {self.delay} seconds...\n")
-                    await asyncio.sleep(self.delay)
+                    retry_delay = self.delay * (backoff_factor ** (i + 1))
+                    print(f"Retrying {url} after {retry_delay} seconds...\n")
+                    await asyncio.sleep(retry_delay)
             
         # Return None if all retry attempts fail
-        return {}
+        return None
 
 
     async def handle_rate_limit(self, response_headers: dict[str, str]):

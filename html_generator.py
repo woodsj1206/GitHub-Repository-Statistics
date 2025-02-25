@@ -1,3 +1,4 @@
+import os
 from repository_metric import RepositoryMetric, RepositoryMetricsTracker
 
 class GitHubRepoMetricsHTMLGenerator:
@@ -12,9 +13,8 @@ class GitHubRepoMetricsHTMLGenerator:
         Initializes the HTML generator for GitHub repository metrics.
 
         Args:
-            theme (str): The theme for the HTML output. Default is "light".
             user_name (str): GitHub username of the user.
-            html_content (str): HTML output.
+            theme (str): The theme for the HTML output. Default is "light".
             profile_link_displayed (bool): Determines if the GitHub profile link should be displayed. Default is True.
             repository_links_displayed (bool): Determines if links to repositories should be displayed. Default is True.
         """
@@ -25,19 +25,21 @@ class GitHubRepoMetricsHTMLGenerator:
         self.repository_links_displayed = repository_links_displayed
 
 
-    def create_html_file(self, filename: str):
+    def create_html_file(self, filename="index.html", output_folder=""):
         """
         Creates an HTML file with the given filename and content.
 
         Args:
-            filename (str): The name of the HTML file to create (e.g., "index.html").
+            filename (str, optional): The name of the HTML file to create (e.g., "index.html").
+            output_folder (str, optional): The folder where the CSV file will be saved. If not specified, it will save in the current directory.
         """
-        
+        full_filename = os.path.join(output_folder, filename)
+
         try:
-            with open(filename, "w") as file:
+            with open(full_filename, "w") as file:
                 file.write(self.html_content)
                 
-            print(f"HTML file '{filename}' created successfully.")
+            print(f"HTML file '{full_filename}' created successfully.")
             
         except Exception as e:
             print(f"An error occurred: {e}")

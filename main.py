@@ -3,7 +3,7 @@ Program Name: GitHub Repository Statistics
 Author: woodsj1206 (https://github.com/woodsj1206)
 Description: This program uses GitHub's API to analyze stars, clones, forks, watchers, and traffic trends across a user's public repositories. 
 Date Created: 2/18/25
-Last Modified: 2/24/25
+Last Modified: 2/25/25
 """
 
 import asyncio
@@ -30,47 +30,78 @@ async def get_repositories(github_user: user.User, api_handler: api_utils.GitHub
                 Returns an empty list if no repositories match or if the API response is None.
     """
     
-    github_repos_url = "https://api.github.com/user/repos"
+    github_repos_url = f"https://api.github.com/user/repos?per_page=100&visibility={visibility}"
+    
+    user_repositories = []
+    while github_repos_url:
+        response = await api_handler.get_response(github_repos_url)
         
-    response = await api_handler.get_response_json(github_repos_url)
+        response_json = response.json() if response else {}
+        
+        user_repositories.extend(response_json)
+        
+        link_header = response.headers.get("Link") if response else None
+        
+        if link_header:
+            # Find the 'next' link in the header
+            urls = link_header.split(',')
+            next_url = None
+            for url in urls:
+                if 'rel="next"' in url:
+                    # Extract the URL for the next page
+                    next_url = url.split(';')[0].strip('<> ')
+                    break
+            
+            # If there is a next page, update the URL for the next request
+            github_repos_url = next_url
+        else:
+            # No more pages
+            github_repos_url = None
+
         
     # Filter repositories based on visibility and ownership
     repositories = [
-        repo for repo in response 
-            if repo["visibility"] == visibility and repo["owner"]["login"] == github_user.user_name
-        ] if response else []
+        repo for repo in user_repositories 
+            if repo["owner"]["login"] == github_user.user_name
+        ]
         
     return repositories
     
 
 async def process_repository(api_handler: api_utils.GitHubAPIHandler, repository: dict, github_user: user.User, metric_tracker: repository_metric.RepositoryMetricsTracker, semaphore: asyncio.Semaphore, lock: asyncio.Lock):
     """
-    Processes a GitHub repository's metrics and traffic data, tracking repository-level and traffic-related metrics.
+    Asynchronously processes and collects various metrics for a GitHub repository, including repository-level data and traffic analytics.
 
     Args:
-        api_handler (api_utils.GitHubAPIHandler): An instance of the API handler responsible for making API calls to GitHub.
-        repository (dict): A dictionary containing repository data, including its name and metrics like stargazers, watchers, and forks.
-        github_user (user.User): The GitHub user associated with the repository. Used to fetch user-specific API data.
-        metric_tracker (repository_metric.RepositoryMetricsTracker): An instance of the metric tracker that collects and stores various repository metrics.
+        api_handler (api_utils.GitHubAPIHandler): The API handler used to interact with GitHub, fetching repository and traffic data.
+        repository (dict): A dictionary containing repository details such as name, stargazers, watchers, and forks.
+        github_user (user.User): A GitHub user object representing the repository's owner, used for fetching user-specific API data.
+        metric_tracker (repository_metric.RepositoryMetricsTracker): An object that tracks and records repository metrics over time.
+        semaphore (asyncio.Semaphore): A semaphore that limits concurrent API calls, helping manage rate limits and ensure efficient resource use.
+        lock (asyncio.Lock): A lock used to ensure thread-safety when updating shared resources or states.
 
-    The function performs the following:
-    - Tracks basic repository metrics: stargazers, watchers, and forks.
-    - Fetches traffic data from GitHub's API (views and clones) for the repository.
-    - Tracks traffic-related metrics: total views, unique visitors, total clones, and unique cloners.
+    Function Behavior:
+        - Tracks basic repository metrics such as the number of stargazers, watchers, and forks.
+        - Fetches traffic data from the GitHub API, including views and clones of the repository.
+        - Records traffic-related metrics like total views, unique visitors, total clones, and unique cloners for analysis.
 
     Returns:
         None
-    """    
+    """
+    
     async with semaphore:
         repository_name = repository.get("name")
         print(f"\nRepository: {repository_name}...\n")
 
         # Construct the GitHub API URL for view and clone data of the current repository
-        view_json, clones_json = await asyncio.gather(
-            api_handler.get_response_json(f"https://api.github.com/repos/{github_user.user_name}/{repository_name}/traffic/views"),
-            api_handler.get_response_json(f"https://api.github.com/repos/{github_user.user_name}/{repository_name}/traffic/clones")
+        views_response, clones_repsonse = await asyncio.gather(
+            api_handler.get_response(f"https://api.github.com/repos/{github_user.user_name}/{repository_name}/traffic/views"),
+            api_handler.get_response(f"https://api.github.com/repos/{github_user.user_name}/{repository_name}/traffic/clones")
         )
-    
+        
+        views_json = views_response.json() if views_response else {}
+        clones_json = clones_repsonse.json() if clones_repsonse else {}
+
         async with lock:
             # Track basic repository metrics: stargazers, watchers, and forks
             metric_tracker.stargazers.add_repository_metric(repository_name, repository.get(metric_tracker.stargazers.name, 0))
@@ -78,8 +109,8 @@ async def process_repository(api_handler: api_utils.GitHubAPIHandler, repository
             metric_tracker.forks.add_repository_metric(repository_name, repository.get(metric_tracker.forks.name, 0))
 
             # Track traffic-related metrics: views and clones (both total and unique)
-            metric_tracker.views.add_repository_traffic_metric(repository_name, view_json)
-            metric_tracker.unique_vistors.add_repository_traffic_metric(repository_name, view_json)
+            metric_tracker.views.add_repository_traffic_metric(repository_name, views_json)
+            metric_tracker.unique_vistors.add_repository_traffic_metric(repository_name, views_json)
 
             metric_tracker.clones.add_repository_traffic_metric(repository_name, clones_json)
             metric_tracker.unique_cloners.add_repository_traffic_metric(repository_name, clones_json)
@@ -105,7 +136,7 @@ async def main():
     # Retrieve repositories owned by the GitHub user
     repositories = await get_repositories(github_user, api_handler)
     
-    semaphore = asyncio.Semaphore(5)
+    semaphore = asyncio.Semaphore(3)
     lock = asyncio.Lock()
     
     # Create a list of task for processing each repository
@@ -118,19 +149,24 @@ async def main():
 
     metric_tracker.print_metrics()
     
+    # Ensure the folder exists
+    output_folder = "output_files"
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+        
     # Generate an HTML content for the repository metrics
     repo_metrics_html_generator = html_generator.GitHubRepoMetricsHTMLGenerator(github_user.user_name, "light")
     repo_metrics_html_generator.generate_html_for_metrics(metric_tracker)
-    repo_metrics_html_generator.create_html_file("index.html")
+    repo_metrics_html_generator.create_html_file("index.html", output_folder)
     
     # Generate an CSV report for the repository metrics
     csv_generator = CSVReportGenerator()
-    csv_generator.generate_repository_metrics_report(metric_tracker)
-    csv_generator.generate_traffic_metric_timestamp_report(metric_tracker.views)
-    csv_generator.generate_traffic_metric_timestamp_report(metric_tracker.unique_vistors)
-    csv_generator.generate_traffic_metric_timestamp_report(metric_tracker.clones)
-    csv_generator.generate_traffic_metric_timestamp_report(metric_tracker.unique_cloners)
-    csv_generator.generate_total_traffic_metrics_report(metric_tracker)
+    csv_generator.generate_repository_metrics_report(metric_tracker, output_folder)
+    csv_generator.generate_traffic_metric_timestamp_report(metric_tracker.views, output_folder)
+    csv_generator.generate_traffic_metric_timestamp_report(metric_tracker.unique_vistors, output_folder)
+    csv_generator.generate_traffic_metric_timestamp_report(metric_tracker.clones, output_folder)
+    csv_generator.generate_traffic_metric_timestamp_report(metric_tracker.unique_cloners, output_folder)
+    csv_generator.generate_total_traffic_metrics_report(metric_tracker, output_folder)
     
 
 if __name__ == "__main__":

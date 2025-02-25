@@ -127,7 +127,7 @@ class RepositoryTrafficMetric(RepositoryMetric):
         
         past_date_utc = datetime.now(timezone.utc).date() - timedelta(days=days_back) 
         return {
-            f"{(past_date_utc + timedelta(days=day_offset + 1)).isoformat()}T00:00:00Z": [0, []]
+            f"{(past_date_utc + timedelta(days=day_offset))}T00:00:00Z": [0, []]
             for day_offset in range(days_back)
         }
     
