@@ -77,11 +77,15 @@ The following shows the main file structure of the project with brief descriptio
 
 ## Acknowledgements
 List of external resources used in the project, along with related projects:
+
 ### External Resources:
 - This program uses [Octicons](https://github.com/primer/octicons) for the icons in the HTML summary card.
+
 ### Related Projects:
   - [github-readme-stats](https://github.com/anuraghazra/github-readme-stats) by [anuraghazra](https://github.com/anuraghazra)
   - [github-stats](https://github.com/jstrieb/github-stats) by [jstrieb](https://github.com/jstrieb)
+
+
 ## Development Environment
 Tools and technologies used in the development of the project:
 - IDE: Microsoft Visual Studio Community 2022 
