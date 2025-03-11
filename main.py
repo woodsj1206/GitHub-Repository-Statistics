@@ -3,7 +3,7 @@ Program Name: GitHub Repository Statistics
 Author: woodsj1206 (https://github.com/woodsj1206)
 Description: This program uses GitHub's API to analyze stars, clones, forks, watchers, and traffic trends across a user's public repositories. 
 Date Created: 2/18/25
-Last Modified: 2/25/25
+Last Modified: 3/11/25
 """
 
 import asyncio
@@ -21,7 +21,8 @@ async def get_repositories(github_user: user.User, api_handler: api_utils.GitHub
     Retrieves the repositories owned by the user based on the specified visibility.
          
     Args:
-        api_handler (GitHubAPIHandler): An instance of GitHubAPIHandler for handling API requests.
+        github_user (user.User): An instance of User for representing a GitHub user.
+        api_handler (api_utils.GitHubAPIHandler): An instance of GitHubAPIHandler for handling API requests.
         visibility (str, optional): Visibility of repositories to fetch (e.g., "public", "private").
                                     Defaults to "public".
                                         
@@ -60,15 +61,15 @@ async def get_repositories(github_user: user.User, api_handler: api_utils.GitHub
 
         
     # Filter repositories based on visibility and ownership
-    repositories = [
+    filtered_repositories = [
         repo for repo in user_repositories 
             if repo["owner"]["login"] == github_user.user_name
         ]
         
-    return repositories
+    return filtered_repositories
     
 
-async def process_repository(api_handler: api_utils.GitHubAPIHandler, repository: dict, github_user: user.User, metric_tracker: repository_metric.RepositoryMetricsTracker, semaphore: asyncio.Semaphore, lock: asyncio.Lock):
+async def process_repository(api_handler: api_utils.GitHubAPIHandler, repository: dict, github_user: user.User, metric_tracker: repository_metric.RepositoryMetricsTracker, semaphore: asyncio.Semaphore, lock: asyncio.Lock) -> None:
     """
     Asynchronously processes and collects various metrics for a GitHub repository, including repository-level data and traffic analytics.
 
@@ -86,7 +87,7 @@ async def process_repository(api_handler: api_utils.GitHubAPIHandler, repository
         - Records traffic-related metrics like total views, unique visitors, total clones, and unique cloners for analysis.
 
     Returns:
-        None
+        None.
     """
     
     async with semaphore:

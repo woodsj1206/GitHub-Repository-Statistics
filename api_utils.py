@@ -30,10 +30,12 @@ class GitHubAPIHandler:
 
         Args:
             url (str): The URL to which the GET request will be sent.
-            backoff_factor (int, optional): Factor used to calculate the retry delay (default is 2). It helps to increase the delay between retries exponentially.
+            backoff_factor (int, optional): Factor used to calculate the retry delay. 
+                                            It helps to increase the delay between retries exponentially. Defaults to 2. 
 
         Returns:
-            httpx.Response: The raw response object if the request is successful (status code 200). Returns `None` after retrying the specified number of attempts if unsuccessful.
+            httpx.Response: The raw response object if the request is successful (status code 200). 
+            None: After retrying the specified number of attempts if unsuccessful.
         """
 
         # Calculate the total number of attempts (initial request + retries)
@@ -71,7 +73,7 @@ class GitHubAPIHandler:
         return None
 
 
-    async def handle_rate_limit(self, response_headers: dict[str, str]):
+    async def handle_rate_limit(self, response_headers: dict[str, str]) -> None:
         """
         Checks GitHub API rate limits and waits if the limit is exceeded.
 
@@ -79,7 +81,7 @@ class GitHubAPIHandler:
             response_headers (dict): Response headers containing rate limit info.
 
         Returns:
-            None
+            None.
         """
         
         # Extract the number of remaining requests from the response headers

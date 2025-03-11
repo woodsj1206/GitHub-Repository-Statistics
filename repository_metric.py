@@ -26,13 +26,16 @@ class RepositoryMetric:
         self.repos_grouped_by_metric = {}
 
 
-    def add_repository_metric(self, repository_name: str, metric_count: int):
+    def add_repository_metric(self, repository_name: str, metric_count: int) -> None:
         """
         Adds the metric value for a given repository, updating total counts and grouping.
 
         Args:
             repository_name (str): The name of the repository.
             metric_count (int): The metric value for the repository.
+            
+        Returns:
+            None.
         """
         
         self.total_metric_count += metric_count
@@ -51,8 +54,13 @@ class RepositoryMetric:
         return self.repos_grouped_by_metric.get(self.max_metric_count, [])
     
 
-    def print_metrics(self):
-        """Prints the values of the attributes."""
+    def print_metrics(self) -> None:
+        """
+        Prints the values of the attributes.
+        
+        Returns:
+            None.
+        """
 
         print(f"Metric Name: {self.name}")
         print(f"Total Metric Count: {self.total_metric_count}")
@@ -67,7 +75,7 @@ class RepositoryTrafficMetric(RepositoryMetric):
 
     Attributes:
         metric_type (str): The type of traffic metric (e.g., 'views', 'clones').
-        metric_at_timestamps (dict): Tracks metric counts per timestamp per repository.
+        name (str): Specific metric attribute (e.g., 'count', 'uniques').
         total_metric_at_timestamps (dict): Tracks total metric counts per timestamp across all repositories.
     """
     
@@ -86,7 +94,7 @@ class RepositoryTrafficMetric(RepositoryMetric):
         self.total_metric_at_timestamps = self.generate_past_dates()
 
 
-    def add_repository_traffic_metric(self, repository_name: str, metric_data: dict):
+    def add_repository_traffic_metric(self, repository_name: str, metric_data: dict) -> None:
         """
         Processes and tracks traffic metric data (views or clones) for a given repository.
 
@@ -95,6 +103,9 @@ class RepositoryTrafficMetric(RepositoryMetric):
             metric_data (dict): A dictionary containing traffic data retrieved from the GitHub API.
                                 Expected to have a key matching 'metric_type' (e.g., 'views', 'clones'),
                                 with each entry containing a 'timestamp' and metric count.
+                                
+        Returns:
+            None.
         """
         
         total_metric_count = 0
@@ -118,7 +129,7 @@ class RepositoryTrafficMetric(RepositoryMetric):
         Each date is mapped to a default list containing a zero value and an empty list.
 
         Args:
-            days_back (int): The number of days to go back from today (default is 14).
+            days_back (int, optional): The number of days to go back from today (Defaults to 14).
 
         Returns:
             dict: A dictionary where each key is a date in 'YYYY-MM-DDT00:00:00Z' format (UTC),
@@ -132,8 +143,13 @@ class RepositoryTrafficMetric(RepositoryMetric):
         }
     
 
-    def print_metrics(self):
-        """Prints the values of the attributes."""
+    def print_metrics(self) -> None:
+        """
+        Prints the values of the attributes.
+
+        Returns:
+            None.
+        """
         
         print(f"Metric Type: {self.metric_type}")
         super().print_metrics()
@@ -163,8 +179,14 @@ class RepositoryMetricsTracker:
         self.clones = RepositoryTrafficMetric("clones", "count")
         self.unique_cloners = RepositoryTrafficMetric("clones", "uniques")
      
-    def print_metrics(self):
-        """Prints all tracked metrics."""
+    def print_metrics(self) -> None:
+        """
+        Prints all tracked metrics.
+        
+        Returns:
+            None.
+        """
+        
         print("Stargazers: ")
         self.stargazers.print_metrics()
         print("######################\n")

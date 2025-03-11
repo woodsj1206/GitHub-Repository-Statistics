@@ -14,10 +14,11 @@ class GitHubRepoMetricsHTMLGenerator:
 
         Args:
             user_name (str): GitHub username of the user.
-            theme (str): The theme for the HTML output. Default is "light".
-            profile_link_displayed (bool): Determines if the GitHub profile link should be displayed. Default is True.
-            repository_links_displayed (bool): Determines if links to repositories should be displayed. Default is True.
+            theme (str, optional): The theme for the HTML output. Defaults to "light".
+            profile_link_displayed (bool, optional): Determines if the GitHub profile link should be displayed. Defaults to True.
+            repository_links_displayed (bool, optional): Determines if links to repositories should be displayed. Defaults to True.
         """
+        
         self.html_content = ""
         self.user_name = user_name
         self.theme = theme
@@ -25,14 +26,18 @@ class GitHubRepoMetricsHTMLGenerator:
         self.repository_links_displayed = repository_links_displayed
 
 
-    def create_html_file(self, filename="index.html", output_folder=""):
+    def create_html_file(self, filename="index.html", output_folder="") -> None:
         """
         Creates an HTML file with the given filename and content.
 
         Args:
-            filename (str, optional): The name of the HTML file to create (e.g., "index.html").
+            filename (str, optional): The name of the HTML file to create. Defaults to "index.html".
             output_folder (str, optional): The folder where the CSV file will be saved. If not specified, it will save in the current directory.
+            
+        Returns:
+            None.
         """
+        
         full_filename = os.path.join(output_folder, filename)
 
         try:
@@ -45,7 +50,7 @@ class GitHubRepoMetricsHTMLGenerator:
             print(f"An error occurred: {e}")
             
 
-    def format_large_number(self, number):
+    def format_large_number(self, number) -> str:
         """
         Formats large numbers into a readable string with appropriate suffixes (k, M, B).
 
@@ -54,10 +59,10 @@ class GitHubRepoMetricsHTMLGenerator:
 
         Returns:
             str: The formatted string representing the number with a suffix:
-                 - 'k' for thousands
-                 - 'M' for millions
-                 - 'B' for billions
-                 - '1B+' if the number exceeds one billion
+                 - 'k' for thousands.
+                 - 'M' for millions.
+                 - 'B' for billions.
+                 - '1B+' if the number exceeds one billion.
 
         The function performs the following:
         - Checks if the number exceeds one billion and returns '1B+' for simplicity.
@@ -65,6 +70,7 @@ class GitHubRepoMetricsHTMLGenerator:
         - Ensures no unnecessary trailing zeros or decimal points are included.
         - Returns the original number as a string if it doesn't meet any factor criteria.
         """
+        
         # Simplify extremely large numbers by returning '1B+' if greater than one billion
         if number > 1_000_000_000:
             return "1B+"
@@ -76,7 +82,7 @@ class GitHubRepoMetricsHTMLGenerator:
                 formatted = f"{number / factor:.1f}".rstrip('0').rstrip('.')
                 return f"{formatted}{suffix}"
 
-        # Return the number as a string if it doesn't meet any scaling factor
+        # Return the number as a string if it does not meet any scaling factor
         return str(number)
 
 
@@ -122,7 +128,7 @@ class GitHubRepoMetricsHTMLGenerator:
         Generates HTML content for displaying repository metrics, applying the selected theme.
 
         Args:
-            metric_tracker (RepositoryMetricsTracker): An object that tracks repository metrics (not used in the snippet but assumed to be part of the class).
+            metric_tracker (repository_metric.RepositoryMetricsTracker): An object that tracks repository metrics (not used in the snippet but assumed to be part of the class).
 
         Returns:
             str: The generated HTML content with the selected theme applied.
@@ -362,7 +368,7 @@ class GitHubRepoMetricsHTMLGenerator:
         Args:
             metric_display_name (str): The plural form of the metric name (e.g., "Stargazers").
             metric_past_tense_name (str): The past tense of the metric name (e.g., "Starred").
-            repository_metric (RepositoryMetric): Object containing traffic metric data for repositories.
+            repository_metric (repository_metric.RepositoryMetric): Object containing traffic metric data for repositories.
             bullet_point_icon_svg (str): SVG markup for bullet points next to sub-sections.
 
         Returns:
